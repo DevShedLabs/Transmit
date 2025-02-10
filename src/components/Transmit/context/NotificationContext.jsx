@@ -1,5 +1,5 @@
 // src/components/Transmit/context/NotificationContext.jsx
-import React, {createContext, useContext, useState, useCallback} from 'react';
+import React, {createContext, useContext, useState, useCallback, useRef} from 'react';
 import {Toast} from 'react-bootstrap';
 import {X} from 'lucide-react';
 
@@ -32,9 +32,10 @@ const NotificationItem = ( { notification, onClose } ) => {
 
 export const NotificationProvider = ( { children } ) => {
     const [ notifications, setNotifications ] = useState( [] );
+    const notificationIdCounter               = useRef( 0 );
 
     const addNotification = useCallback( ( notification ) => {
-        const id = Date.now();
+        const id = `notification-${Date.now()}-${notificationIdCounter.current++}`;
         setNotifications( current => [ ...current, { ...notification, id } ] );
 
         // Auto-dismiss after timeout unless it's an error

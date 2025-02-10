@@ -1,3 +1,4 @@
+// src/App.jsx
 import React from 'react';
 import {Container} from 'react-bootstrap';
 import Transmit from './components/Transmit';

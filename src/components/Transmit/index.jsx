@@ -1,5 +1,5 @@
 // src/components/Transmit/index.jsx
-import React from 'react';
+import React, {useCallback} from 'react';
 import {Container, Row, Col} from 'react-bootstrap';
 import {useTransmitState} from './hooks/useTransmitState';
 import {useRequest} from './hooks/useRequest';
@@ -15,8 +15,13 @@ const Transmit = () => {
     const { sendRequest, loading, error, response } = useRequest();
     const { notify }                                = useNotification();
 
-    const handleSend = async () => {
+    const handleSend = useCallback( async () => {
         try {
+            if ( !state.url ) {
+                notify( 'Please enter a URL', 'error' );
+                return;
+            }
+
             // Build request object from state
             const request = {
                 method:     state.method,
@@ -30,21 +35,21 @@ const Transmit = () => {
                 settings:   state.settings
             };
 
-            await sendRequest( request, state.environment );
+            const responseData = await sendRequest( request, state.environment );
+            state.setResponse( responseData );
             notify( 'Request sent successfully', 'success' );
         } catch ( err ) {
             notify( err.message || 'Failed to send request', 'error' );
         }
-    };
+    }, [ state, sendRequest, notify ] );
 
-    const handleSave = () => {
+    const handleSave = useCallback( () => {
         notify( 'Saving requests is not implemented yet', 'info' );
-    };
+    }, [ notify ] );
 
     return (
         <Container fluid className="vh-100 p-0">
             <Row className="h-100 g-0">
-                {/* Collections Sidebar */}
                 <Col xs={2} className="bg-dark text-white h-100 border-end">
                     <CollectionsSidebar
                         collections={state.collections}
@@ -59,7 +64,6 @@ const Transmit = () => {
                     />
                 </Col>
 
-                {/* Main Content */}
                 <Col className="h-100 d-flex flex-column">
                     <div className="flex-grow-1 overflow-auto">
                         <RequestPanel
@@ -83,7 +87,6 @@ const Transmit = () => {
                     </div>
                 </Col>
 
-                {/* History Sidebar */}
                 {state.showHistory && (
                     <Col xs={3} className="bg-white h-100 border-start">
                         <HistorySidebar />
@@ -91,7 +94,6 @@ const Transmit = () => {
                 )}
             </Row>
 
-            {/* Settings Dialog */}
             {state.showSettings && (
                 <SettingsDialog onClose={() => state.setShowSettings( false )} />
             )}

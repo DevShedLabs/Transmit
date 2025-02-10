@@ -33,7 +33,7 @@ const ResponsePanel = ( {
             <Card className="mt-3 border-danger">
                 <Card.Body>
                     <Card.Title className="text-danger">Request Failed</Card.Title>
-                    <pre className="bg-light p-3 rounded mt-3">
+                    <pre className="bg-light p-3 rounded mt-3" style={{ maxHeight: '300px', overflow: 'auto' }}>
             {error.message}
                         {error.details && (
                             <div className="mt-2 text-muted">
@@ -57,7 +57,7 @@ const ResponsePanel = ( {
     }
 
     return (
-        <Card className="mt-3">
+        <Card className="mt-3" style={{ maxHeight: 'calc(100vh - 300px)', display: 'flex', flexDirection: 'column' }}>
             <Card.Header>
                 <Nav variant="tabs" className="card-header-tabs">
                     <Nav.Item>
@@ -86,7 +86,7 @@ const ResponsePanel = ( {
                     </Nav.Item>
                 </Nav>
             </Card.Header>
-            <Card.Body>
+            <Card.Body className="overflow-auto">
                 {activeTab === 'body' && (
                     <ResponseBody
                         data={response.data}

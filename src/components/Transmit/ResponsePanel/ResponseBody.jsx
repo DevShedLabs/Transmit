@@ -39,16 +39,28 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
     const renderContent = () => {
         if ( !data ) return null;
 
+        const preStyles = {
+            backgroundColor: '#f8f9fa',
+            padding:         '1rem',
+            borderRadius:    '0.25rem',
+            fontSize:        '0.875rem',
+            maxHeight:       '500px',
+            overflowX:       'auto',
+            overflowY:       'auto',
+            whiteSpace:      'pre-wrap',
+            wordBreak:       'break-word'
+        };
+
         if ( contentType?.includes( 'application/json' ) ) {
             if ( viewMode === 'raw' ) {
                 return (
-                    <pre className="bg-light p-3 rounded">
+                    <pre style={preStyles}>
             {JSON.stringify( data )}
           </pre>
                 );
             }
             return (
-                <pre className="bg-light p-3 rounded">
+                <pre style={preStyles}>
           {JSON.stringify( data, null, 2 )}
         </pre>
             );
@@ -57,7 +69,7 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
         if ( contentType?.includes( 'text/html' ) ) {
             if ( viewMode === 'raw' ) {
                 return (
-                    <pre className="bg-light p-3 rounded">
+                    <pre style={preStyles}>
             {data}
           </pre>
                 );
@@ -65,22 +77,26 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
             return (
                 <iframe
                     srcDoc={data}
-                    className="w-100"
-                    style={{ height: '500px', border: 'none' }}
+                    style={{
+                        width:        '100%',
+                        height:       '500px',
+                        border:       'none',
+                        borderRadius: '0.25rem'
+                    }}
                     title="Response Preview"
                 />
             );
         }
 
         return (
-            <pre className="bg-light p-3 rounded">
+            <pre style={preStyles}>
         {data}
       </pre>
         );
     };
 
     return (
-        <div>
+        <div className="d-flex flex-column h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <Form.Select
                     style={{ width: 'auto' }}
@@ -102,7 +118,9 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
                     </Button>
                 </ButtonGroup>
             </div>
-            {renderContent()}
+            <div className="flex-grow-1 overflow-auto">
+                {renderContent()}
+            </div>
         </div>
     );
 };

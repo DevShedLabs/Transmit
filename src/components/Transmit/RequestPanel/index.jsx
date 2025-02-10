@@ -3,14 +3,29 @@ import React from 'react';
 import URLBar from './URLBar';
 import ConfigTabs from './ConfigTabs';
 
+const RequestPanel = ( {
+                           method,
+                           setMethod,
+                           url,
+                           setUrl,
+                           loading,
+                           activeConfigTab,
+                           setActiveConfigTab,
+                           onSend,
+                           onSave
+                       } ) => {
+    const handleSend = () => {
+        if ( typeof onSend === 'function' ) {
+            onSend();
+        }
+    };
 
-const RequestPanel = ({
-                          method, setMethod,
-                          url, setUrl,
-                          loading,
-                          activeConfigTab, setActiveConfigTab,
-                          // ... other props
-                      }) => {
+    const handleSave = () => {
+        if ( typeof onSave === 'function' ) {
+            onSave();
+        }
+    };
+
     return (
         <div className="flex-1 overflow-auto">
             <div className="p-4 bg-white shadow">
@@ -20,6 +35,8 @@ const RequestPanel = ({
                     url={url}
                     setUrl={setUrl}
                     loading={loading}
+                    onSend={handleSend}
+                    onSave={handleSave}
                 />
                 <ConfigTabs
                     activeTab={activeConfigTab}
