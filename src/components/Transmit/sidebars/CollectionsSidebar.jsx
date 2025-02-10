@@ -1,9 +1,9 @@
-// src/components/Transmit/sidebars/CollectionsSidebar.jsx
 import React from 'react';
+import {Button, Nav} from 'react-bootstrap';
 import {FolderPlus, ChevronDown, History} from 'lucide-react';
 
 const CollectionsSidebar = ( {
-                                 collections = [], // Add default value
+                                 collections = [],
                                  onSelect = () => {
                                  },
                                  onShowHistory = () => {
@@ -12,40 +12,44 @@ const CollectionsSidebar = ( {
                                  }
                              } ) => {
     return (
-        <div className="w-64 bg-gray-800 text-white flex flex-col">
-            <div className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-semibold">Collections</h2>
-                    <button
+        <div className="d-flex flex-column h-100">
+            <div className="p-3">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="mb-0">Collections</h5>
+                    <Button
+                        variant="link"
+                        className="p-0 text-white"
                         onClick={onCreateCollection}
-                        className="p-1 hover:bg-gray-700 rounded"
                     >
-                        <FolderPlus className="w-4 h-4" />
-                    </button>
+                        <FolderPlus size={18} />
+                    </Button>
                 </div>
 
                 {collections.length === 0 ? (
-                    <div className="text-sm text-gray-400 text-center py-4">
+                    <div className="text-muted text-center py-3">
                         No collections yet
                     </div>
                 ) : (
-                     collections.map( collection => (
-                         <CollectionGroup
-                             key={collection.id}
-                             collection={collection}
-                             onSelect={onSelect}
-                         />
-                     ) )
+                     <Nav className="flex-column">
+                         {collections.map( collection => (
+                             <CollectionGroup
+                                 key={collection.id}
+                                 collection={collection}
+                                 onSelect={onSelect}
+                             />
+                         ) )}
+                     </Nav>
                  )}
             </div>
 
-            <button
+            <Button
+                variant="link"
+                className="text-white mt-auto mx-3 mb-3 text-decoration-none"
                 onClick={onShowHistory}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-700 mt-auto"
             >
-                <History className="w-4 h-4" />
+                <History size={18} className="me-2" />
                 History
-            </button>
+            </Button>
         </div>
     );
 };
@@ -55,20 +59,21 @@ const CollectionGroup = ( { collection, onSelect } ) => {
 
     return (
         <div className="mb-2">
-            <div
-                className="flex items-center gap-1 hover:bg-gray-700 p-1 rounded cursor-pointer"
+            <Button
+                variant="link"
+                className="text-white p-2 text-decoration-none w-100 text-start"
                 onClick={() => setIsOpen( !isOpen )}
             >
                 <ChevronDown
-                    className={`w-4 h-4 transform transition-transform ${
-                        isOpen ? '' : '-rotate-90'
-                    }`}
+                    size={18}
+                    className={`me-2 ${isOpen ? '' : 'rotate-270'}`}
+                    style={{ transition: 'transform 0.2s' }}
                 />
-                <span>{collection.name}</span>
-            </div>
+                {collection.name}
+            </Button>
 
             {isOpen && (
-                <div className="ml-4">
+                <Nav className="flex-column ms-3">
                     {collection.items.map( item => (
                         <RequestItem
                             key={item.id}
@@ -76,7 +81,7 @@ const CollectionGroup = ( { collection, onSelect } ) => {
                             onClick={() => onSelect( item )}
                         />
                     ) )}
-                </div>
+                </Nav>
             )}
         </div>
     );
@@ -84,22 +89,23 @@ const CollectionGroup = ( { collection, onSelect } ) => {
 
 const RequestItem = ( { item, onClick } ) => {
     const methodColors = {
-        GET:    'text-green-400',
-        POST:   'text-blue-400',
-        PUT:    'text-yellow-400',
-        DELETE: 'text-red-400'
+        GET:    'text-success',
+        POST:   'text-primary',
+        PUT:    'text-warning',
+        DELETE: 'text-danger'
     };
 
     return (
-        <div
-            className="flex items-center gap-2 hover:bg-gray-700 p-1 rounded cursor-pointer text-sm"
+        <Button
+            variant="link"
+            className="text-white p-2 text-decoration-none w-100 text-start"
             onClick={onClick}
         >
-            <div className={`w-12 text-xs ${methodColors[ item.method ] || 'text-gray-400'}`}>
+            <span className={`me-2 ${methodColors[ item.method ] || 'text-muted'}`} style={{ fontSize: '0.8em' }}>
                 {item.method}
-            </div>
+            </span>
             <span>{item.name}</span>
-        </div>
+        </Button>
     );
 };
 

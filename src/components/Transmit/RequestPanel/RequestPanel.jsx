@@ -1,5 +1,5 @@
 import React from 'react';
-import URLBar from './URLBar';
+import {Form, Button, InputGroup, Nav} from 'react-bootstrap';
 import ConfigTabs from './ConfigTabs';
 
 const RequestPanel = ( {
@@ -10,53 +10,64 @@ const RequestPanel = ( {
                            loading,
                            activeConfigTab,
                            setActiveConfigTab,
-                           headers,
-                           setHeaders,  // Make sure this is included
-                           params,
-                           setParams,
-                           body,
-                           setBody,
-                           bodyType,
-                           setBodyType,
-                           bodyFormat,
-                           setBodyFormat,
-                           auth,
-                           setAuth,
-                           settings,
-                           setSettings,
                            onSend,
                            onSave
                        } ) => {
+    const methods = [ 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD' ];
+
     return (
-        <div className="flex-1 overflow-auto">
-            <div className="p-4 bg-white shadow">
-                <URLBar
-                    method={method}
-                    setMethod={setMethod}
-                    url={url}
-                    setUrl={setUrl}
-                    loading={loading}
-                    onSend={onSend}
-                    onSave={onSave}
+        <div className="p-3">
+            {/* URL Bar */}
+            <InputGroup className="mb-3">
+                <Form.Select
+                    value={method}
+                    onChange={( e ) => setMethod( e.target.value )}
+                    style={{ width: 'auto' }}
+                >
+                    {methods.map( m => (
+                        <option key={m} value={m}>{m}</option>
+                    ) )}
+                </Form.Select>
+                <Form.Control
+                    type="text"
+                    value={url}
+                    onChange={( e ) => setUrl( e.target.value )}
+                    placeholder="Enter request URL"
                 />
+                <Button
+                    variant="primary"
+                    onClick={onSend}
+                    disabled={loading}
+                >
+                    {loading ? 'Sending...' : 'Send'}
+                </Button>
+                <Button
+                    variant="success"
+                    onClick={onSave}
+                >
+                    Save
+                </Button>
+            </InputGroup>
+
+            {/* Tabs Navigation */}
+            <Nav variant="tabs" className="mb-3">
+                {[ 'Headers', 'Params', 'Body', 'Auth', 'Settings' ].map( tab => (
+                    <Nav.Item key={tab}>
+                        <Nav.Link
+                            active={activeConfigTab === tab.toLowerCase()}
+                            onClick={() => setActiveConfigTab( tab.toLowerCase() )}
+                        >
+                            {tab}
+                        </Nav.Link>
+                    </Nav.Item>
+                ) )}
+            </Nav>
+
+            {/* Tab Content */}
+            <div className="tab-content p-3 border border-top-0 rounded-bottom">
                 <ConfigTabs
                     activeTab={activeConfigTab}
                     onTabChange={setActiveConfigTab}
-                    headers={headers}
-                    setHeaders={setHeaders}  // Explicitly pass setHeaders
-                    params={params}
-                    setParams={setParams}
-                    body={body}
-                    setBody={setBody}
-                    bodyType={bodyType}
-                    setBodyType={setBodyType}
-                    bodyFormat={bodyFormat}
-                    setBodyFormat={setBodyFormat}
-                    method={method}
-                    auth={auth}
-                    setAuth={setAuth}
-                    settings={settings}
-                    setSettings={setSettings}
                 />
             </div>
         </div>
