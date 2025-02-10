@@ -2,12 +2,13 @@
 import {useState, useCallback} from 'react';
 import {executeRequest, RequestError} from '../utils/request';
 import {storage} from '../utils/localStorage';
+import {useNotification} from '../context/NotificationContext';
 
 export const useRequest = () => {
-    const { notify }                = useNotification();
     const [ loading, setLoading ]   = useState( false );
     const [ error, setError ]       = useState( null );
     const [ response, setResponse ] = useState( null );
+    const { notify }                = useNotification();
 
     const sendRequest = useCallback( async ( request, environment ) => {
         setLoading( true );
@@ -54,7 +55,7 @@ export const useRequest = () => {
         } finally {
             setLoading( false );
         }
-    }, [] );
+    }, [ notify ] );
 
     return {
         sendRequest,
