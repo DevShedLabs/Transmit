@@ -5,25 +5,7 @@ import Body from './Body';
 import Auth from './Auth';
 import Settings from './Settings';
 
-const ConfigTabs = ( {
-                         activeTab,
-                         headers,
-                         setHeaders,  // Make sure this prop is included
-                         params,
-                         setParams,
-                         body,
-                         setBody,
-                         bodyType,
-                         setBodyType,
-                         bodyFormat,
-                         setBodyFormat,
-                         method,
-                         auth,
-                         setAuth,
-                         settings,
-                         setSettings,
-                         onTabChange
-                     } ) => {
+const ConfigTabs = ( { activeTab, onTabChange } ) => {
     const tabs = [
         { id: 'headers', label: 'Headers' },
         { id: 'params', label: 'Params' },
@@ -35,45 +17,15 @@ const ConfigTabs = ( {
     const renderTabContent = () => {
         switch ( activeTab ) {
             case 'headers':
-                return (
-                    <Headers
-                        headers={headers}
-                        setHeaders={setHeaders}  // Explicitly pass setHeaders
-                    />
-                );
+                return <Headers />;  // No longer passing props since Headers manages its own state
             case 'params':
-                return (
-                    <Params
-                        params={params}
-                        setParams={setParams}
-                    />
-                );
+                return <Params />;
             case 'body':
-                return (
-                    <Body
-                        body={body}
-                        setBody={setBody}
-                        bodyType={bodyType}
-                        setBodyType={setBodyType}
-                        bodyFormat={bodyFormat}
-                        setBodyFormat={setBodyFormat}
-                        method={method}
-                    />
-                );
+                return <Body />;
             case 'auth':
-                return (
-                    <Auth
-                        auth={auth}
-                        setAuth={setAuth}
-                    />
-                );
+                return <Auth />;
             case 'settings':
-                return (
-                    <Settings
-                        settings={settings}
-                        setSettings={setSettings}
-                    />
-                );
+                return <Settings />;
             default:
                 return null;
         }

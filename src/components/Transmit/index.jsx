@@ -7,58 +7,26 @@ import HistorySidebar from './sidebars/HistorySidebar';
 import SettingsDialog from './dialogs/SettingsDialog';
 
 const Transmit = () => {
-    // Destructure everything we need from useTransmitState
-    const {
-              collections,
-              method,
-              setMethod,
-              url,
-              setUrl,
-              headers,
-              setHeaders,  // Make sure this is included
-              params,
-              setParams,
-              body,
-              setBody,
-              bodyType,
-              setBodyType,
-              bodyFormat,
-              setBodyFormat,
-              response,
-              responseView,
-              setResponseView,
-              loading,
-              activeConfigTab,
-              setActiveConfigTab,
-              showHistory,
-              setShowHistory,
-              showSettings,
-              setShowSettings,
-              auth,
-              setAuth,
-              settings,
-              setSettings
-          } = useTransmitState();
-
-    console.log( 'Transmit: setHeaders is', typeof setHeaders ); // Debug log
+    const state = useTransmitState();
+    console.log( 'Transmit state:', state ); // Debug log
 
     const handleSend = () => {
-        console.log( 'Sending request...', headers ); // Debug log
+        console.log( 'Sending request with headers:', state.headers );
     };
 
     const handleSave = () => {
-        console.log( 'Saving request...', headers ); // Debug log
+        console.log( 'Saving request with headers:', state.headers );
     };
 
     return (
         <div className="flex h-screen max-h-screen bg-gray-100">
             <CollectionsSidebar
-                collections={collections}
+                collections={state.collections}
                 onSelect={( item ) => {
-                    setMethod( item.method );
-                    setUrl( item.url );
+                    state.setMethod( item.method );
+                    state.setUrl( item.url );
                 }}
-                onShowHistory={() => setShowHistory( !showHistory )}
+                onShowHistory={() => state.setShowHistory( !state.showHistory )}
                 onCreateCollection={() => {
                     console.log( 'Create collection' );
                 }}
@@ -66,41 +34,42 @@ const Transmit = () => {
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 <RequestPanel
-                    method={method}
-                    setMethod={setMethod}
-                    url={url}
-                    setUrl={setUrl}
-                    headers={headers}
-                    setHeaders={setHeaders}  // Explicitly pass setHeaders
-                    params={params}
-                    setParams={setParams}
-                    body={body}
-                    setBody={setBody}
-                    bodyType={bodyType}
-                    setBodyType={setBodyType}
-                    bodyFormat={bodyFormat}
-                    setBodyFormat={setBodyFormat}
-                    loading={loading}
-                    activeConfigTab={activeConfigTab}
-                    setActiveConfigTab={setActiveConfigTab}
-                    auth={auth}
-                    setAuth={setAuth}
-                    settings={settings}
-                    setSettings={setSettings}
+                    // Pass all state and setters explicitly
+                    method={state.method}
+                    setMethod={state.setMethod}
+                    url={state.url}
+                    setUrl={state.setUrl}
+                    headers={state.headers}
+                    setHeaders={state.setHeaders} // Make sure setHeaders is passed
+                    params={state.params}
+                    setParams={state.setParams}
+                    body={state.body}
+                    setBody={state.setBody}
+                    bodyType={state.bodyType}
+                    setBodyType={state.setBodyType}
+                    bodyFormat={state.bodyFormat}
+                    setBodyFormat={state.setBodyFormat}
+                    loading={state.loading}
+                    activeConfigTab={state.activeConfigTab}
+                    setActiveConfigTab={state.setActiveConfigTab}
+                    auth={state.auth}
+                    setAuth={state.setAuth}
+                    settings={state.settings}
+                    setSettings={state.setSettings}
                     onSend={handleSend}
                     onSave={handleSave}
                 />
                 <ResponsePanel
-                    response={response}
-                    responseView={responseView}
-                    setResponseView={setResponseView}
+                    response={state.response}
+                    responseView={state.responseView}
+                    setResponseView={state.setResponseView}
                 />
             </div>
 
-            {showHistory && <HistorySidebar />}
+            {state.showHistory && <HistorySidebar />}
 
-            {showSettings && (
-                <SettingsDialog onClose={() => setShowSettings( false )} />
+            {state.showSettings && (
+                <SettingsDialog onClose={() => state.setShowSettings( false )} />
             )}
         </div>
     );
