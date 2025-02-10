@@ -1,0 +1,19 @@
+{
+  "output": {
+    "filePath": "Transmit-RAG.md",
+    "style": "markdown",
+    "removeComments": true,
+    "removeEmptyLines": true,
+    "topFilesLength": 5,
+    "showLineNumbers": false
+  },
+  "include": [],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": []
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

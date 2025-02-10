@@ -1,0 +1,19 @@
+# Add patterns to ignore here, one per line
+# Example:
+*.log
+tmp/
+Readme.md
+composer.json
+vendor/
+que/
+composer.lock
+index.php
+OLD/
+Tests/
+.repopackignore
+repopack.config.json
+RAG.md
+.gitignore
+LICENSE
+node_modules/
+yarn-error.log
