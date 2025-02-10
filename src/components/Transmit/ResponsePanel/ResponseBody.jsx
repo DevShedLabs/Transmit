@@ -1,59 +1,108 @@
 // src/components/Transmit/ResponsePanel/ResponseBody.jsx
-import React from 'react';
-import {Copy} from 'lucide-react';
+import React, {useState} from 'react';
+import {ButtonGroup, Button, Form} from 'react-bootstrap';
+import {Copy, Download} from 'lucide-react';
+import {useNotification} from '../context/NotificationContext';
 
-const ResponseBody = ( { data, view } ) => {
-    const [ indentation, setIndentation ] = React.useState( 2 );
+const ResponseBody = ( { data, contentType, onCopy } ) => {
+    const [ viewMode, setViewMode ] = useState( 'formatted' );
+    const { notify }                = useNotification();
 
-    const copyFormatted = () => {
-        const text = typeof data === 'object'
-                     ? JSON.stringify( data, null, indentation )
-                     : data;
-        navigator.clipboard.writeText( text );
+    const handleCopy = async () => {
+        try {
+            const text = typeof data === 'object' ? JSON.stringify( data, null, 2 ) : data;
+            await navigator.clipboard.writeText( text );
+            onCopy();
+        } catch ( error ) {
+            notify( 'Failed to copy response', 'error' );
+        }
+    };
+
+    const handleDownload = () => {
+        try {
+            const text = typeof data === 'object' ? JSON.stringify( data, null, 2 ) : data;
+            const blob = new Blob( [ text ], { type: contentType || 'text/plain' } );
+            const url  = URL.createObjectURL( blob );
+            const a    = document.createElement( 'a' );
+            a.href     = url;
+            a.download = 'response.' + ( contentType?.includes( 'json' ) ? 'json' : 'txt' );
+            document.body.appendChild( a );
+            a.click();
+            document.body.removeChild( a );
+            URL.revokeObjectURL( url );
+            notify( 'Response downloaded successfully', 'success' );
+        } catch ( error ) {
+            notify( 'Failed to download response', 'error' );
+        }
+    };
+
+    const renderContent = () => {
+        if ( !data ) return null;
+
+        if ( contentType?.includes( 'application/json' ) ) {
+            if ( viewMode === 'raw' ) {
+                return (
+                    <pre className="bg-light p-3 rounded">
+            {JSON.stringify( data )}
+          </pre>
+                );
+            }
+            return (
+                <pre className="bg-light p-3 rounded">
+          {JSON.stringify( data, null, 2 )}
+        </pre>
+            );
+        }
+
+        if ( contentType?.includes( 'text/html' ) ) {
+            if ( viewMode === 'raw' ) {
+                return (
+                    <pre className="bg-light p-3 rounded">
+            {data}
+          </pre>
+                );
+            }
+            return (
+                <iframe
+                    srcDoc={data}
+                    className="w-100"
+                    style={{ height: '500px', border: 'none' }}
+                    title="Response Preview"
+                />
+            );
+        }
+
+        return (
+            <pre className="bg-light p-3 rounded">
+        {data}
+      </pre>
+        );
     };
 
     return (
-        <div className="p-4">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Response Body</h3>
-                <div className="flex items-center gap-2">
-                    {typeof data === 'object' && (
-                        <select
-                            className="text-sm border rounded px-2 py-1"
-                            value={indentation}
-                            onChange={( e ) => setIndentation( Number( e.target.value ) )}
-                        >
-                            <option value="2">2 Space</option>
-                            <option value="4">4 Space</option>
-                            <option value="0">Compact</option>
-                        </select>
-                    )}
-                    <button onClick={copyFormatted} className="p-1 hover:bg-gray-100 rounded">
-                        <Copy className="w-4 h-4" />
-                    </button>
-                </div>
+        <div>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <Form.Select
+                    style={{ width: 'auto' }}
+                    value={viewMode}
+                    onChange={( e ) => setViewMode( e.target.value )}
+                >
+                    <option value="formatted">Formatted</option>
+                    <option value="raw">Raw</option>
+                    {contentType?.includes( 'text/html' ) && <option value="preview">Preview</option>}
+                </Form.Select>
+                <ButtonGroup>
+                    <Button variant="outline-secondary" onClick={handleCopy}>
+                        <Copy size={16} className="me-2" />
+                        Copy
+                    </Button>
+                    <Button variant="outline-secondary" onClick={handleDownload}>
+                        <Download size={16} className="me-2" />
+                        Download
+                    </Button>
+                </ButtonGroup>
             </div>
-
-            <div className="bg-gray-50 rounded">
-                {view === 'pretty' && typeof data === 'object' && (
-                    <pre className="p-4 overflow-auto">
-            {JSON.stringify( data, null, indentation )}
-          </pre>
-                )}
-                {view === 'raw' && (
-                    <pre className="p-4 overflow-auto">
-            {typeof data === 'object' ? JSON.stringify( data ) : data}
-          </pre>
-                )}
-                {view === 'preview' && (
-                    <div
-                        className="p-4"
-                        dangerouslySetInnerHTML={{
-                            __html: typeof data === 'string' ? data : ''
-                        }}
-                    />
-                )}
-            </div>
+            {renderContent()}
         </div>
     );
 };
