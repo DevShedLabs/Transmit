@@ -1,78 +1,104 @@
-// src/components/Transmit/RequestPanel/ConfigTabs/Auth.jsx
-import React from 'react';
+import React, {useState} from 'react';
+import {Form, Row, Col} from 'react-bootstrap';
 
-const Auth = ( { auth, setAuth, handleAuthChange } ) => {
+const Auth = () => {
+    const [ auth, setAuth ] = useState( {
+        type:   'none',
+        basic:  { username: '', password: '' },
+        bearer: { token: '' },
+        apiKey: { key: '', value: '', in: 'header' }
+    } );
+
+    const handleChange = ( type, field, value ) => {
+        setAuth( prev => ( {
+            ...prev,
+            [ type ]: {
+                ...prev[ type ],
+                [ field ]: value
+            }
+        } ) );
+    };
+
     return (
-        <div className="mb-4 space-y-4">
-            <div>
-                <select
+        <Form>
+            <Form.Group className="mb-3">
+                <Form.Select
                     value={auth.type}
                     onChange={( e ) => setAuth( { ...auth, type: e.target.value } )}
-                    className="w-full px-3 py-2 border rounded"
                 >
                     <option value="none">No Auth</option>
                     <option value="basic">Basic Auth</option>
                     <option value="bearer">Bearer Token</option>
                     <option value="apiKey">API Key</option>
-                </select>
-            </div>
+                </Form.Select>
+            </Form.Group>
 
             {auth.type === 'basic' && (
-                <div className="space-y-2">
-                    <input
-                        type="text"
-                        value={auth.basic.username}
-                        onChange={( e ) => handleAuthChange( 'basic', 'username', e.target.value )}
-                        placeholder="Username"
-                        className="w-full px-3 py-2 border rounded"
-                    />
-                    <input
-                        type="password"
-                        value={auth.basic.password}
-                        onChange={( e ) => handleAuthChange( 'basic', 'password', e.target.value )}
-                        placeholder="Password"
-                        className="w-full px-3 py-2 border rounded"
-                    />
-                </div>
+                <Row className="mb-3">
+                    <Col>
+                        <Form.Group>
+                            <Form.Control
+                                type="text"
+                                placeholder="Username"
+                                value={auth.basic.username}
+                                onChange={( e ) => handleChange( 'basic', 'username', e.target.value )}
+                            />
+                        </Form.Group>
+                    </Col>
+                    <Col>
+                        <Form.Group>
+                            <Form.Control
+                                type="password"
+                                placeholder="Password"
+                                value={auth.basic.password}
+                                onChange={( e ) => handleChange( 'basic', 'password', e.target.value )}
+                            />
+                        </Form.Group>
+                    </Col>
+                </Row>
             )}
 
             {auth.type === 'bearer' && (
-                <input
-                    type="text"
-                    value={auth.bearer.token}
-                    onChange={( e ) => handleAuthChange( 'bearer', 'token', e.target.value )}
-                    placeholder="Token"
-                    className="w-full px-3 py-2 border rounded"
-                />
+                <Form.Group className="mb-3">
+                    <Form.Control
+                        type="text"
+                        placeholder="Token"
+                        value={auth.bearer.token}
+                        onChange={( e ) => handleChange( 'bearer', 'token', e.target.value )}
+                    />
+                </Form.Group>
             )}
 
             {auth.type === 'apiKey' && (
-                <div className="space-y-2">
-                    <input
-                        type="text"
-                        value={auth.apiKey.key}
-                        onChange={( e ) => handleAuthChange( 'apiKey', 'key', e.target.value )}
-                        placeholder="Key"
-                        className="w-full px-3 py-2 border rounded"
-                    />
-                    <input
-                        type="text"
-                        value={auth.apiKey.value}
-                        onChange={( e ) => handleAuthChange( 'apiKey', 'value', e.target.value )}
-                        placeholder="Value"
-                        className="w-full px-3 py-2 border rounded"
-                    />
-                    <select
-                        value={auth.apiKey.in}
-                        onChange={( e ) => handleAuthChange( 'apiKey', 'in', e.target.value )}
-                        className="w-full px-3 py-2 border rounded"
-                    >
-                        <option value="header">Header</option>
-                        <option value="query">Query Param</option>
-                    </select>
-                </div>
+                <>
+                    <Form.Group className="mb-3">
+                        <Form.Control
+                            type="text"
+                            placeholder="Key"
+                            value={auth.apiKey.key}
+                            onChange={( e ) => handleChange( 'apiKey', 'key', e.target.value )}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Control
+                            type="text"
+                            placeholder="Value"
+                            value={auth.apiKey.value}
+                            onChange={( e ) => handleChange( 'apiKey', 'value', e.target.value )}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Select
+                            value={auth.apiKey.in}
+                            onChange={( e ) => handleChange( 'apiKey', 'in', e.target.value )}
+                        >
+                            <option value="header">Header</option>
+                            <option value="query">Query Parameter</option>
+                        </Form.Select>
+                    </Form.Group>
+                </>
             )}
-        </div>
+        </Form>
     );
 };
 

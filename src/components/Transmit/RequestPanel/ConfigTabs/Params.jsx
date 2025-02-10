@@ -1,58 +1,78 @@
-// src/components/Transmit/RequestPanel/ConfigTabs/Params.jsx
-import React from 'react';
+import React, {useState} from 'react';
+import {Form, Button, Row, Col} from 'react-bootstrap';
 
-const Params = ( { params, setParams, updateUrlWithParams } ) => {
-    const addParam = () => setParams( [ ...params, { key: '', value: '' } ] );
+const Params = () => {
+    const [ params, setParams ] = useState( [ { key: '', value: '' } ] );
 
-    const handleParamChange = ( index, field, value ) => {
-        const newParams             = [ ...params ];
-        newParams[ index ][ field ] = value;
+    const addParam = () => {
+        setParams( [ ...params, { key: '', value: '' } ] );
+    };
+
+    const updateParam = ( index, field, value ) => {
+        const newParams = [ ...params ];
+        if ( !newParams[ index ] ) {
+            newParams[ index ] = {};
+        }
+        newParams[ index ] = {
+            ...newParams[ index ],
+            [ field ]: value
+        };
         setParams( newParams );
-        updateUrlWithParams( newParams );
+    };
+
+    const removeParam = ( index ) => {
+        setParams( params.filter( ( _, i ) => i !== index ) );
     };
 
     return (
-        <div className="mb-4">
-            <div className="grid grid-cols-[1fr,1fr,auto] gap-2">
-                <div className="text-sm text-gray-600">Key</div>
-                <div className="text-sm text-gray-600">Value</div>
-                <div></div>
+        <Form>
+            <div className="mb-2">
+                <Row className="mb-2">
+                    <Col>
+                        <Form.Label className="text-muted">Key</Form.Label>
+                    </Col>
+                    <Col>
+                        <Form.Label className="text-muted">Value</Form.Label>
+                    </Col>
+                    <Col xs="auto"></Col>
+                </Row>
                 {params.map( ( param, index ) => (
-                    <React.Fragment key={index}>
-                        <input
-                            type="text"
-                            value={param.key}
-                            onChange={( e ) => handleParamChange( index, 'key', e.target.value )}
-                            placeholder="Key"
-                            className="px-3 py-2 border rounded"
-                        />
-                        <input
-                            type="text"
-                            value={param.value}
-                            onChange={( e ) => handleParamChange( index, 'value', e.target.value )}
-                            placeholder="Value"
-                            className="px-3 py-2 border rounded"
-                        />
-                        <button
-                            onClick={() => {
-                                const newParams = params.filter( ( _, i ) => i !== index );
-                                setParams( newParams );
-                                updateUrlWithParams( newParams );
-                            }}
-                            className="px-3 py-2 text-white bg-red-500 rounded hover:bg-red-600"
-                        >
-                            ×
-                        </button>
-                    </React.Fragment>
+                    <Row key={index} className="mb-2">
+                        <Col>
+                            <Form.Control
+                                type="text"
+                                value={param?.key || ''}
+                                onChange={( e ) => updateParam( index, 'key', e.target.value )}
+                                placeholder="Key"
+                            />
+                        </Col>
+                        <Col>
+                            <Form.Control
+                                type="text"
+                                value={param?.value || ''}
+                                onChange={( e ) => updateParam( index, 'value', e.target.value )}
+                                placeholder="Value"
+                            />
+                        </Col>
+                        <Col xs="auto">
+                            <Button
+                                variant="danger"
+                                onClick={() => removeParam( index )}
+                            >
+                                ×
+                            </Button>
+                        </Col>
+                    </Row>
                 ) )}
             </div>
-            <button
+            <Button
+                variant="outline-primary"
                 onClick={addParam}
-                className="mt-2 px-3 py-1 text-sm text-blue-500 border border-blue-500 rounded hover:bg-blue-50"
+                size="sm"
             >
                 + Add Parameter
-            </button>
-        </div>
+            </Button>
+        </Form>
     );
 };
 

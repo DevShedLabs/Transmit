@@ -1,44 +1,49 @@
-// src/components/Transmit/RequestPanel/URLBar.jsx
 import React from 'react';
-import { Send, Save } from 'lucide-react';
+import {Form, Button, InputGroup} from 'react-bootstrap';
+import {Send, Save} from 'lucide-react';
 
-const URLBar = ({ method, setMethod, url, setUrl, loading, onSend, onSave }) => {
-    const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'];
+const URLBar = ( { method, setMethod, url, setUrl, loading, onSend, onSave } ) => {
+    const methods = [ 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD' ];
 
     return (
-        <div className="flex gap-2 mb-4">
-            <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value)}
-                className="px-3 py-2 border rounded"
-            >
-                {methods.map(m => (
-                    <option key={m} value={m}>{m}</option>
-                ))}
-            </select>
-            <input
+        <InputGroup className="mb-3">
+            <div style={{ width: '120px', flex: '0 0 120px' }}>
+                <Form.Select
+                    value={method}
+                    onChange={( e ) => setMethod( e.target.value )}
+                >
+                    {methods.map( m => (
+                        <option key={m} value={m}>{m}</option>
+                    ) )}
+                </Form.Select>
+            </div>
+
+            <Form.Control
                 type="text"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={( e ) => setUrl( e.target.value )}
                 placeholder="Enter request URL"
-                className="flex-1 px-3 py-2 border rounded"
             />
-            <button
+
+            <Button
+                variant="primary"
                 onClick={onSend}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-blue-300"
+                className="d-flex align-items-center gap-2"
             >
-                <Send className="w-4 h-4" />
+                <Send size={16} />
                 {loading ? 'Sending...' : 'Send'}
-            </button>
-            <button
+            </Button>
+
+            <Button
+                variant="success"
                 onClick={onSave}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600"
+                className="d-flex align-items-center gap-2"
             >
-                <Save className="w-4 h-4" />
+                <Save size={16} />
                 Save
-            </button>
-        </div>
+            </Button>
+        </InputGroup>
     );
 };
 
