@@ -46,14 +46,99 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
         }
     };
 
+    const renderTableView = () => {
+        if ( !Array.isArray( data ) ) return null;
+        if ( data.length === 0 ) return null;
+
+        const columns = Object.keys( data[ 0 ] );
+
+        return (
+            <div className="table-container" style={{
+                maxHeight:    '500px',
+                overflowY:    'auto',
+                overflowX:    'auto',
+                border:       '1px solid #dee2e6',
+                borderRadius: '4px'
+            }}>
+                <table className="table table-striped table-hover" style={{ margin: 0 }}>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        {columns.map( column => (
+                            <th key={column}>{column}</th>
+                        ) )}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {data.map( ( row, index ) => (
+                        <tr key={index}>
+                            <td>{index}</td>
+                            {columns.map( column => (
+                                <td key={column}>
+                                    {typeof row[ column ] === 'object'
+                                     ? JSON.stringify( row[ column ] )
+                                     : String( row[ column ] )}
+                                </td>
+                            ) )}
+                        </tr>
+                    ) )}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
+    const renderContent = () => {
+        if ( !data ) return null;
+
+        // For table view
+        if ( Array.isArray( data ) && viewMode === 'table' ) {
+            return renderTableView();
+        }
+
+        // For code view (both formatted and raw)
+        const language         = getLanguage();
+        const formattedContent = formatContent( data );
+
+        return (
+            <div className="code-container" style={{
+                backgroundColor: '#2d2d2d',
+                borderRadius:    '4px',
+                position:        'relative',
+                height:          '500px'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    top:      0,
+                    left:     0,
+                    right:    0,
+                    bottom:   0,
+                    overflow: 'auto'
+                }}>
+                    <pre style={{
+                        margin:   0,
+                        padding:  '1rem',
+                        minWidth: 'fit-content'
+                    }}>
+                        <code className={`language-${language}`} style={{
+                            fontFamily: 'Monaco, Consolas, "Courier New", monospace',
+                            fontSize:   '0.875rem',
+                            whiteSpace: 'pre'
+                        }}>
+                            {formattedContent}
+                        </code>
+                    </pre>
+                </div>
+            </div>
+        );
+    };
+
     const getLanguage = () => {
-        // Check if data is a JSON object first
         if ( typeof data === 'object' ||
             ( contentType && contentType.includes( 'application/json' ) ) ||
             ( typeof data === 'string' && data.trim().startsWith( '{' ) ) ) {
             return 'json';
         }
-        if ( contentType?.includes( 'text/html' ) ) return 'html';
         if ( contentType?.includes( 'text/xml' ) ) return 'xml';
         if ( contentType?.includes( 'javascript' ) ) return 'javascript';
         return 'text';
@@ -63,7 +148,6 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
         if ( typeof content === 'object' ) {
             return JSON.stringify( content, null, viewMode === 'formatted' ? 2 : 0 );
         }
-        // Try to parse string as JSON if it looks like JSON
         if ( typeof content === 'string' && content.trim().startsWith( '{' ) ) {
             try {
                 const parsed = JSON.parse( content );
@@ -73,69 +157,6 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
             }
         }
         return content;
-    };
-
-    const renderContent = () => {
-        if ( !data ) return null;
-
-        const containerStyles = {
-            position:        'relative',
-            maxHeight:       '500px',
-            overflow:        'auto',
-            backgroundColor: '#2d2d2d',
-            borderRadius:    '0.25rem',
-        };
-
-        const preStyles = {
-            margin:          0,
-            padding:         '1rem',
-            fontSize:        '0.875rem',
-            backgroundColor: 'transparent',
-            whiteSpace:      viewMode === 'formatted' ? 'pre-wrap' : 'pre',
-            wordWrap:        'break-word',
-            wordBreak:       'break-word',
-            overflowWrap:    'break-word',
-            maxWidth:        '100%',
-        };
-
-        const codeStyles = {
-            whiteSpace: 'inherit',
-            wordBreak:  'inherit',
-            fontSize:   'inherit',
-            fontFamily: 'Monaco, Consolas, "Courier New", monospace',
-        };
-
-        if ( contentType?.includes( 'text/html' ) && viewMode === 'preview' ) {
-            return (
-                <iframe
-                    srcDoc={data}
-                    style={{
-                        width:        '100%',
-                        height:       '500px',
-                        border:       'none',
-                        borderRadius: '0.25rem'
-                    }}
-                    title="Response Preview"
-                />
-            );
-        }
-
-        const language         = getLanguage();
-        const formattedContent = formatContent( data );
-
-        console.log( 'Language detected:', language );
-        console.log( 'Content type:', contentType );
-        console.log( 'Data type:', typeof data );
-
-        return (
-            <div style={containerStyles}>
-        <pre style={preStyles}>
-          <code className={`language-${language}`} style={codeStyles}>
-            {formattedContent}
-          </code>
-        </pre>
-            </div>
-        );
     };
 
     return (
@@ -148,7 +169,7 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
                 >
                     <option value="formatted">Formatted</option>
                     <option value="raw">Raw</option>
-                    {contentType?.includes( 'text/html' ) && <option value="preview">Preview</option>}
+                    {Array.isArray( data ) && <option value="table">Table</option>}
                 </Form.Select>
                 <ButtonGroup>
                     <Button variant="outline-secondary" onClick={handleCopy}>
