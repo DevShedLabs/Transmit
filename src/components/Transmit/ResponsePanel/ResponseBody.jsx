@@ -5,7 +5,6 @@ import {Copy, Download} from 'lucide-react';
 import {useNotification} from '../context/NotificationContext';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
-// Import additional languages
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-xml-doc';
@@ -16,7 +15,6 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
     const { notify }                = useNotification();
 
     useEffect( () => {
-        // Highlight all code blocks after render
         Prism.highlightAll();
     }, [ data, viewMode ] );
 
@@ -66,15 +64,31 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
     const renderContent = () => {
         if ( !data ) return null;
 
-        const preStyles = {
-            backgroundColor: '#2d2d2d',
-            padding:         '1rem',
-            borderRadius:    '0.25rem',
-            fontSize:        '0.875rem',
+        const containerStyles = {
+            position:        'relative',
             maxHeight:       '500px',
-            overflowX:       'auto',
-            overflowY:       'auto',
-            margin:          0
+            overflow:        'auto',
+            backgroundColor: '#2d2d2d',
+            borderRadius:    '0.25rem',
+        };
+
+        const preStyles = {
+            margin:          0,
+            padding:         '1rem',
+            fontSize:        '0.875rem',
+            backgroundColor: 'transparent',
+            whiteSpace:      viewMode === 'formatted' ? 'pre-wrap' : 'pre',
+            wordWrap:        'break-word',
+            wordBreak:       'break-word',
+            overflowWrap:    'break-word',
+            maxWidth:        '100%',
+        };
+
+        const codeStyles = {
+            whiteSpace: 'inherit',
+            wordBreak:  'inherit',
+            fontSize:   'inherit',
+            fontFamily: 'Monaco, Consolas, "Courier New", monospace',
         };
 
         if ( contentType?.includes( 'text/html' ) && viewMode === 'preview' ) {
@@ -96,11 +110,13 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
         const formattedContent = formatContent( data );
 
         return (
-            <pre style={preStyles}>
-        <code className={`language-${language}`}>
-          {formattedContent}
-        </code>
-      </pre>
+            <div style={containerStyles}>
+        <pre style={preStyles}>
+          <code className={`language-${language}`} style={codeStyles}>
+            {formattedContent}
+          </code>
+        </pre>
+            </div>
         );
     };
 
@@ -127,7 +143,7 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
                     </Button>
                 </ButtonGroup>
             </div>
-            <div className="flex-grow-1 overflow-auto">
+            <div className="flex-grow-1" style={{ minHeight: 0 }}>
                 {renderContent()}
             </div>
         </div>
