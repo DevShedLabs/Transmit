@@ -23,15 +23,17 @@ const URLBar = ( { method, setMethod, url, setUrl, loading, onSend, onSave } ) =
     return (
         <Form onSubmit={handleSubmit}>
             <InputGroup className="mb-3">
-                <Form.Select
-                    value={method}
-                    onChange={( e ) => setMethod( e.target.value )}
-                    style={{ width: '120px' }}
-                >
-                    {methods.map( m => (
-                        <option key={m} value={m}>{m}</option>
-                    ) )}
-                </Form.Select>
+                <div className="flex gap-2">
+                    <Form.Select
+                        value={method}
+                        onChange={( e ) => setMethod( e.target.value )}
+                        style={{ width: '120px' }}
+                    >
+                        {methods.map( m => (
+                            <option key={m} value={m}>{m}</option>
+                        ) )}
+                    </Form.Select>
+                </div>
                 <Form.Control
                     type="text"
                     value={url}
@@ -56,7 +58,9 @@ const URLBar = ( { method, setMethod, url, setUrl, loading, onSend, onSave } ) =
                     <Save size={16} />
                     Save
                 </Button>
+
             </InputGroup>
+
         </Form>
     );
 };

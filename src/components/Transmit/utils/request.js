@@ -11,7 +11,6 @@ export class RequestError extends Error {
 
 export const prepareRequestConfig = async ( request, environment ) => {
     try {
-        // Process URL and parameters
         let processedUrl = replaceEnvironmentVariables( request.url, environment );
         if ( request.params && request.params.length > 0 ) {
             const queryParams = request.params
@@ -21,8 +20,12 @@ export const prepareRequestConfig = async ( request, environment ) => {
             processedUrl += processedUrl.includes( '?' ) ? `&${queryParams}` : `?${queryParams}`;
         }
 
-        // Process headers
         const headers = new Headers();
+        // Add default headers that browsers usually send
+        headers.append( 'Accept', '*/*' );
+        headers.append( 'Accept-Language', 'en-US,en;q=0.9' );
+        headers.append( 'Connection', 'keep-alive' );
+
         if ( request.headers ) {
             request.headers.forEach( header => {
                 if ( header.key && header.value ) {
@@ -31,7 +34,6 @@ export const prepareRequestConfig = async ( request, environment ) => {
             } );
         }
 
-        // Handle authentication
         if ( request.auth ) {
             switch ( request.auth.type ) {
                 case 'basic':
@@ -52,7 +54,6 @@ export const prepareRequestConfig = async ( request, environment ) => {
             }
         }
 
-        // Process request body
         let body = undefined;
         if ( request.method !== 'GET' && request.method !== 'HEAD' ) {
             switch ( request.bodyType ) {
@@ -60,7 +61,6 @@ export const prepareRequestConfig = async ( request, environment ) => {
                     if ( request.bodyFormat === 'json' ) {
                         headers.append( 'Content-Type', 'application/json' );
                         try {
-                            // Validate JSON
                             JSON.parse( request.body );
                             body = request.body;
                         } catch ( e ) {
@@ -100,17 +100,18 @@ export const prepareRequestConfig = async ( request, environment ) => {
             }
         }
 
+        // Return fetch configuration with more permissive settings
         return {
             method:         request.method,
             headers,
             body,
             url:            processedUrl,
-            signal:         request.signal, // For request cancellation
-            credentials:    request.credentials || 'same-origin',
-            mode:           request.mode || 'cors',
-            cache:          request.cache || 'default',
+            signal:         request.signal,
+            credentials:    'omit', // Changed from 'same-origin' to 'include'
+            mode:           'cors',
+            cache:          'no-cache', // Changed from 'default' to 'no-cache'
             redirect:       request.settings?.followRedirects ? 'follow' : 'manual',
-            referrerPolicy: request.referrerPolicy || 'no-referrer'
+            referrerPolicy: 'no-referrer'
         };
     } catch ( error ) {
         if ( error instanceof RequestError ) {
@@ -128,7 +129,19 @@ export const executeRequest = async ( request, environment ) => {
         const config   = await prepareRequestConfig( request, environment );
         const response = await fetch( config.url, config );
 
-        // Handle different response types
+        // Process ALL headers immediately
+        const headers = {};
+        for ( const [ key, value ] of response.headers ) {
+            // Preserve exact header case and handle multiple values
+            if ( headers[ key ] ) {
+                headers[ key ] = Array.isArray( headers[ key ] )
+                                 ? [ ...headers[ key ], value ]
+                                 : [ headers[ key ], value ];
+            } else {
+                headers[ key ] = value;
+            }
+        }
+
         const contentType = response.headers.get( 'content-type' );
         if ( contentType?.includes( 'application/json' ) ) {
             try {
@@ -136,19 +149,16 @@ export const executeRequest = async ( request, environment ) => {
             } catch ( e ) {
                 throw new RequestError( 'Invalid JSON response', { cause: e } );
             }
-        } else if ( contentType?.includes( 'application/xml' ) ) {
-            responseData = await response.text();
-        } else if ( contentType?.includes( 'text/' ) ) {
+        } else if ( contentType?.includes( 'application/xml' ) || contentType?.includes( 'text/' ) ) {
             responseData = await response.text();
         } else {
-            // Handle binary data
             responseData = await response.blob();
         }
 
         return {
             status:     response.status,
             statusText: response.statusText,
-            headers:    Object.fromEntries( response.headers.entries() ),
+            headers,
             data:       responseData,
             time:       Date.now() - startTime,
             size:       responseData instanceof Blob ? responseData.size : new Blob( [ JSON.stringify( responseData ) ] ).size
