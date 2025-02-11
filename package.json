@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "@types/prismjs": "^1.26.5",
     "bootstrap": "^5.3.3",
     "lucide-react": "^0.475.0",
+    "prismjs": "^1.29.0",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-dom": "^19.0.0"

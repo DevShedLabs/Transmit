@@ -21,7 +21,7 @@ const NotificationItem = ( { notification, onClose } ) => {
                 </strong>
                 <button
                     type="button"
-                    className="btn-close btn-close-white"
+                    className="btn-close"
                     onClick={() => onClose( notification.id )}
                 />
             </Toast.Header>
@@ -42,7 +42,7 @@ export const NotificationProvider = ( { children } ) => {
         if ( notification.type !== 'error' ) {
             setTimeout( () => {
                 removeNotification( id );
-            }, notification.duration || 3000 );
+            }, notification.duration || 4000 );
         }
 
         return id;
@@ -59,7 +59,7 @@ export const NotificationProvider = ( { children } ) => {
     return (
         <NotificationContext.Provider value={{ notify, removeNotification }}>
             {children}
-            <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1050 }}>
+            <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
                 {notifications.map( ( notification ) => (
                     <NotificationItem
                         key={notification.id}

@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';  // Import Bootstrap CSS
 import './index.css';
+import './components/Transmit/styles/syntax-highlighting.css';
 import App from './App.jsx';
 
 createRoot( document.getElementById( 'root' ) ).render(

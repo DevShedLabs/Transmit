@@ -1,12 +1,24 @@
 // src/components/Transmit/ResponsePanel/ResponseBody.jsx
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {ButtonGroup, Button, Form} from 'react-bootstrap';
 import {Copy, Download} from 'lucide-react';
 import {useNotification} from '../context/NotificationContext';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';
+// Import additional languages
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-xml-doc';
+import 'prismjs/components/prism-markup';
 
 const ResponseBody = ( { data, contentType, onCopy } ) => {
     const [ viewMode, setViewMode ] = useState( 'formatted' );
     const { notify }                = useNotification();
+
+    useEffect( () => {
+        // Highlight all code blocks after render
+        Prism.highlightAll();
+    }, [ data, viewMode ] );
 
     const handleCopy = async () => {
         try {
@@ -36,44 +48,36 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
         }
     };
 
+    const getLanguage = () => {
+        if ( contentType?.includes( 'application/json' ) ) return 'json';
+        if ( contentType?.includes( 'text/html' ) ) return 'html';
+        if ( contentType?.includes( 'text/xml' ) ) return 'xml';
+        if ( contentType?.includes( 'javascript' ) ) return 'javascript';
+        return 'text';
+    };
+
+    const formatContent = ( content ) => {
+        if ( typeof content === 'object' ) {
+            return JSON.stringify( content, null, viewMode === 'formatted' ? 2 : 0 );
+        }
+        return content;
+    };
+
     const renderContent = () => {
         if ( !data ) return null;
 
         const preStyles = {
-            backgroundColor: '#f8f9fa',
+            backgroundColor: '#2d2d2d',
             padding:         '1rem',
             borderRadius:    '0.25rem',
             fontSize:        '0.875rem',
             maxHeight:       '500px',
             overflowX:       'auto',
             overflowY:       'auto',
-            whiteSpace:      'pre-wrap',
-            wordBreak:       'break-word'
+            margin:          0
         };
 
-        if ( contentType?.includes( 'application/json' ) ) {
-            if ( viewMode === 'raw' ) {
-                return (
-                    <pre style={preStyles}>
-            {JSON.stringify( data )}
-          </pre>
-                );
-            }
-            return (
-                <pre style={preStyles}>
-          {JSON.stringify( data, null, 2 )}
-        </pre>
-            );
-        }
-
-        if ( contentType?.includes( 'text/html' ) ) {
-            if ( viewMode === 'raw' ) {
-                return (
-                    <pre style={preStyles}>
-            {data}
-          </pre>
-                );
-            }
+        if ( contentType?.includes( 'text/html' ) && viewMode === 'preview' ) {
             return (
                 <iframe
                     srcDoc={data}
@@ -88,9 +92,14 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
             );
         }
 
+        const language         = getLanguage();
+        const formattedContent = formatContent( data );
+
         return (
             <pre style={preStyles}>
-        {data}
+        <code className={`language-${language}`}>
+          {formattedContent}
+        </code>
       </pre>
         );
     };
