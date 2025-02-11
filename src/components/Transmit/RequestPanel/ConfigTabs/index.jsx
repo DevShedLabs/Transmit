@@ -1,3 +1,4 @@
+// src/components/Transmit/RequestPanel/ConfigTabs/index.jsx
 import React from 'react';
 import Headers from './Headers';
 import Params from './Params';
@@ -17,7 +18,7 @@ const ConfigTabs = ( { activeTab, onTabChange } ) => {
     const renderTabContent = () => {
         switch ( activeTab ) {
             case 'headers':
-                return <Headers />;  // No longer passing props since Headers manages its own state
+                return <Headers />;
             case 'params':
                 return <Params />;
             case 'body':
@@ -33,22 +34,22 @@ const ConfigTabs = ( { activeTab, onTabChange } ) => {
 
     return (
         <div>
-            <div className="border-b mb-4">
-                <div className="flex gap-4">
+            <div className="bg-light border-bottom">
+                <div className="d-flex">
                     {tabs.map( tab => (
                         <button
                             key={tab.id}
                             onClick={() => onTabChange( tab.id )}
-                            className={`px-4 py-2 ${
-                                activeTab === tab.id ? 'border-b-2 border-blue-500' : ''
-                            }`}
+                            className={`config-tab-button ${activeTab === tab.id ? 'active' : ''}`}
                         >
                             {tab.label}
                         </button>
                     ) )}
                 </div>
             </div>
-            {renderTabContent()}
+            <div className="p-3">
+                {renderTabContent()}
+            </div>
         </div>
     );
 };
