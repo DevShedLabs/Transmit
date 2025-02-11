@@ -47,7 +47,12 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
     };
 
     const getLanguage = () => {
-        if ( contentType?.includes( 'application/json' ) ) return 'json';
+        // Check if data is a JSON object first
+        if ( typeof data === 'object' ||
+            ( contentType && contentType.includes( 'application/json' ) ) ||
+            ( typeof data === 'string' && data.trim().startsWith( '{' ) ) ) {
+            return 'json';
+        }
         if ( contentType?.includes( 'text/html' ) ) return 'html';
         if ( contentType?.includes( 'text/xml' ) ) return 'xml';
         if ( contentType?.includes( 'javascript' ) ) return 'javascript';
@@ -57,6 +62,15 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
     const formatContent = ( content ) => {
         if ( typeof content === 'object' ) {
             return JSON.stringify( content, null, viewMode === 'formatted' ? 2 : 0 );
+        }
+        // Try to parse string as JSON if it looks like JSON
+        if ( typeof content === 'string' && content.trim().startsWith( '{' ) ) {
+            try {
+                const parsed = JSON.parse( content );
+                return JSON.stringify( parsed, null, viewMode === 'formatted' ? 2 : 0 );
+            } catch ( e ) {
+                console.warn( 'Failed to parse JSON string:', e );
+            }
         }
         return content;
     };
@@ -108,6 +122,10 @@ const ResponseBody = ( { data, contentType, onCopy } ) => {
 
         const language         = getLanguage();
         const formattedContent = formatContent( data );
+
+        console.log( 'Language detected:', language );
+        console.log( 'Content type:', contentType );
+        console.log( 'Data type:', typeof data );
 
         return (
             <div style={containerStyles}>
