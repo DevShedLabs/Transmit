@@ -1,5 +1,14 @@
 # Transmit - Open Source API Testing Platform
 
+> ⚠️ **IMPORTANT SECURITY NOTICE** ⚠️
+>
+> This project is intended for **local development use only**. It has not been security audited and contains a PHP proxy that could be dangerous if exposed to the public internet.
+>
+> - DO NOT deploy this to production
+> - DO NOT expose the proxy.php to the internet
+> - Run this tool on localhost ONLY
+> - Use only for development and testing purposes
+
 Transmit is a modern, feature-rich API testing platform built with React. It provides an intuitive interface for testing HTTP APIs, managing collections of requests, and analyzing responses.
 
 ![Transmit Interface](public/Transmit.png)
