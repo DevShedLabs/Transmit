@@ -1,7 +1,5 @@
 // src/components/Transmit/utils/storageManager.js
 
-import {v4 as uuidv4} from 'uuid';
-
 const STORAGE_KEYS = {
     COLLECTIONS: 'transmit:collections',
     HISTORY:     'transmit:history',
@@ -10,6 +8,15 @@ const STORAGE_KEYS = {
 };
 
 const MAX_HISTORY_ITEMS = 100;
+
+// Simple UUID generator
+const generateId = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, function ( c ) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : ( r & 0x3 | 0x8 );
+        return v.toString( 16 );
+    } );
+};
 
 class StorageManager {
     constructor() {
@@ -62,7 +69,7 @@ class StorageManager {
     saveCollection( collection ) {
         const collections   = this.getCollections();
         const newCollection = {
-            id:          collection.id || uuidv4(),
+            id:          collection.id || generateId(),
             name:        collection.name,
             description: collection.description,
             requests:    collection.requests || [],
@@ -92,24 +99,43 @@ class StorageManager {
     }
 
     addHistoryItem( request, response ) {
-        const history     = this.getHistory();
+        const history = this.getHistory();
+
+        // Create history item
         const historyItem = {
-            id:        uuidv4(),
+            id:        generateId(),
             request,
             response,
             timestamp: new Date().toISOString()
         };
 
-        history.unshift( historyItem );
+        // Check for duplicates within the last second (to prevent double entries)
+        const isDuplicate = history.some( item => {
+            const timeDiff = Math.abs(
+                new Date( item.timestamp ) - new Date( historyItem.timestamp )
+            );
+            return (
+                timeDiff < 1000 && // Within 1 second
+                item.request.method === request.method &&
+                item.request.url === request.url
+            );
+        } );
 
-        // Limit history size
-        if ( history.length > MAX_HISTORY_ITEMS ) {
-            history.pop();
+        if ( !isDuplicate ) {
+            history.unshift( historyItem );
+
+            // Limit history size
+            if ( history.length > MAX_HISTORY_ITEMS ) {
+                history.pop();
+            }
+
+            this._save( STORAGE_KEYS.HISTORY, history );
+            return historyItem;
         }
 
-        this._save( STORAGE_KEYS.HISTORY, history );
-        return historyItem;
+        return null;
     }
+
 
     clearHistory() {
         this._save( STORAGE_KEYS.HISTORY, [] );
