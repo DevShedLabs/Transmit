@@ -21,13 +21,17 @@ const generateId = () => {
 class StorageManager {
     constructor() {
         this.subscribers = new Map();
+        console.log( 'StorageManager initialized' );
+        console.log( 'Initial collections:', this.getCollections() );
     }
 
-    // Helper methods for localStorage operations
     _save( key, value ) {
         try {
+            console.log( `Saving to ${key}:`, value );
             localStorage.setItem( key, JSON.stringify( value ) );
             this._notifySubscribers( key, value );
+            console.log( `Successfully saved to ${key}` );
+            return true;
         } catch ( error ) {
             console.error( `Error saving to ${key}:`, error );
             throw new Error( `Failed to save data: ${error.message}` );
@@ -37,6 +41,7 @@ class StorageManager {
     _load( key, defaultValue = null ) {
         try {
             const data = localStorage.getItem( key );
+            console.log( `Loading from ${key}:`, data );
             return data ? JSON.parse( data ) : defaultValue;
         } catch ( error ) {
             console.error( `Error loading from ${key}:`, error );
@@ -44,30 +49,42 @@ class StorageManager {
         }
     }
 
-    // Subscription management
     subscribe( key, callback ) {
+        console.log( `New subscriber for ${key}` );
         if ( !this.subscribers.has( key ) ) {
             this.subscribers.set( key, new Set() );
         }
         this.subscribers.get( key ).add( callback );
 
-        // Return unsubscribe function
         return () => {
             this.subscribers.get( key )?.delete( callback );
         };
     }
 
     _notifySubscribers( key, value ) {
-        this.subscribers.get( key )?.forEach( callback => callback( value ) );
+        console.log( `Notifying subscribers for ${key}`, value );
+        const subscribers = this.subscribers.get( key );
+        if ( subscribers ) {
+            subscribers.forEach( callback => {
+                try {
+                    callback( value );
+                } catch ( error ) {
+                    console.error( 'Error in subscriber callback:', error );
+                }
+            } );
+        }
     }
 
-    // Collections Management
     getCollections() {
-        return this._load( STORAGE_KEYS.COLLECTIONS, [] );
+        const collections = this._load( STORAGE_KEYS.COLLECTIONS, [] );
+        console.log( 'Getting collections:', collections );
+        return collections;
     }
 
     saveCollection( collection ) {
-        const collections   = this.getCollections();
+        console.log( 'Saving collection:', collection );
+        const collections = this.getCollections();
+
         const newCollection = {
             id:          collection.id || generateId(),
             name:        collection.name,
@@ -78,20 +95,27 @@ class StorageManager {
         };
 
         const existingIndex = collections.findIndex( c => c.id === newCollection.id );
+
+        let updatedCollections;
         if ( existingIndex >= 0 ) {
-            collections[ existingIndex ] = newCollection;
+            updatedCollections                  = [ ...collections ];
+            updatedCollections[ existingIndex ] = newCollection;
         } else {
-            collections.push( newCollection );
+            updatedCollections = [ ...collections, newCollection ];
         }
 
-        this._save( STORAGE_KEYS.COLLECTIONS, collections );
+        this._save( STORAGE_KEYS.COLLECTIONS, updatedCollections );
+        console.log( 'Collection saved, new state:', updatedCollections );
         return newCollection;
     }
 
     deleteCollection( collectionId ) {
+        console.log( 'Deleting collection:', collectionId );
         const collections = this.getCollections().filter( c => c.id !== collectionId );
         this._save( STORAGE_KEYS.COLLECTIONS, collections );
+        console.log( 'Collection deleted, new state:', collections );
     }
+
 
     // Request History Management
     getHistory() {

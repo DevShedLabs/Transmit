@@ -1,15 +1,18 @@
 // src/components/Transmit/index.jsx
 
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Container, Row, Col} from 'react-bootstrap';
 import {useTransmitState} from './hooks/useTransmitState';
 import {useRequest} from './hooks/useRequest';
 import {useStorage} from './hooks/useStorage';
+import {storageManager} from './utils/storageManager';
 import RequestPanel from './RequestPanel';
 import ResponsePanel from './ResponsePanel';
 import CollectionsSidebar from './sidebars/CollectionsSidebar';
 import HistorySidebar from './sidebars/HistorySidebar';
 import SettingsDialog from './dialogs/SettingsDialog';
+import CreateCollectionDialog from './dialogs/CreateCollectionDialog';
+import SaveRequestDialog from './dialogs/SaveRequestDialog';
 import {useNotification} from './context/NotificationContext';
 
 const Transmit = () => {
@@ -21,14 +24,19 @@ const Transmit = () => {
               history,
               settings,
               saveCollection,
+              deleteCollection,
               addHistoryItem,
               updateSettings,
               saveWorkspaceState
           }                                         = useStorage();
 
+    // Dialog states
+    const [ showCreateCollection, setShowCreateCollection ] = useState( false );
+    const [ showSaveRequest, setShowSaveRequest ]           = useState( false );
+
     // Save workspace state when it changes
     useEffect( () => {
-        saveWorkspaceState( {
+        const workspaceState = {
             method:     state.method,
             url:        state.url,
             headers:    state.headers,
@@ -38,7 +46,8 @@ const Transmit = () => {
             bodyFormat: state.bodyFormat,
             auth:       state.auth,
             settings:   state.settings
-        } );
+        };
+        saveWorkspaceState( workspaceState );
     }, [
         state.method,
         state.url,
@@ -73,54 +82,131 @@ const Transmit = () => {
 
             const responseData = await sendRequest( request, state.environment );
             state.setResponse( responseData );
-
-            // Add to history
             addHistoryItem( request, responseData );
-
             notify( 'Request sent successfully', 'success' );
         } catch ( err ) {
             notify( err.message || 'Failed to send request', 'error' );
         }
     }, [ state, sendRequest, notify, addHistoryItem ] );
 
-    const handleSave = useCallback( () => {
-        const request = {
-            name:       `${state.method} ${state.url}`,
-            method:     state.method,
-            url:        state.url,
-            headers:    state.headers.filter( h => h.key && h.value ),
-            params:     state.params.filter( p => p.key && p.value ),
-            body:       state.body,
-            bodyType:   state.bodyType,
-            bodyFormat: state.bodyFormat,
-            auth:       state.auth,
-            settings:   state.settings
-        };
+    const generateId = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : ( r & 0x3 | 0x8 );
+            return v.toString( 16 );
+        } );
+    };
 
-        const collectionName     = 'Default Collection'; // You might want to make this configurable
-        const existingCollection = collections.find( c => c.name === collectionName );
+    const handleCreateCollection = useCallback( ( collection ) => {
+        try {
+            console.log( 'Creating collection:', collection );
+            const newCollection = {
+                ...collection,
+                id:        generateId(),
+                requests:  [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
 
-        if ( existingCollection ) {
-            saveCollection( {
-                ...existingCollection,
-                requests: [ ...existingCollection.requests, request ]
-            } );
-        } else {
-            saveCollection( {
-                name:     collectionName,
-                requests: [ request ]
-            } );
+            storageManager._save( 'transmit:collections', [
+                ...( collections || [] ),
+                newCollection
+            ] );
+
+            notify( 'Collection created successfully', 'success' );
+            setShowCreateCollection( false );
+        } catch ( error ) {
+            console.error( 'Failed to create collection:', error );
+            notify( 'Failed to create collection: ' + error.message, 'error' );
         }
+    }, [ collections, notify ] );
 
-        notify( 'Request saved to collection', 'success' );
-    }, [ state, collections, saveCollection, notify ] );
+    const handleDeleteCollection = useCallback( ( collectionId ) => {
+        try {
+            if ( !collections ) return;
+
+            const updatedCollections = collections.filter( c => c.id !== collectionId );
+            storageManager._save( 'transmit:collections', updatedCollections );
+
+            notify( 'Collection deleted successfully', 'success' );
+        } catch ( error ) {
+            console.error( 'Failed to delete collection:', error );
+            notify( 'Failed to delete collection', 'error' );
+        }
+    }, [ collections, notify ] );
+
+    const handleSaveRequest = useCallback( ( { collectionId, request } ) => {
+        try {
+            if ( !collections ) return;
+
+            const collection = collections.find( c => c.id === collectionId );
+            if ( !collection ) throw new Error( 'Collection not found' );
+
+            const newRequest = {
+                id:          generateId(),
+                name:        request.name,
+                description: request.description,
+                method:      state.method,
+                url:         state.url,
+                headers:     state.headers.filter( h => h.key && h.value ),
+                params:      state.params.filter( p => p.key && p.value ),
+                body:        state.body,
+                bodyType:    state.bodyType,
+                bodyFormat:  state.bodyFormat,
+                auth:        state.auth,
+                createdAt:   new Date().toISOString()
+            };
+
+            const updatedCollections = collections.map( c =>
+                c.id === collectionId
+                ? {
+                        ...c,
+                        requests:  [ ...c.requests, newRequest ],
+                        updatedAt: new Date().toISOString()
+                    }
+                : c
+            );
+
+            storageManager._save( 'transmit:collections', updatedCollections );
+            notify( 'Request saved to collection', 'success' );
+            setShowSaveRequest( false );
+        } catch ( error ) {
+            console.error( 'Failed to save request:', error );
+            notify( 'Failed to save request: ' + error.message, 'error' );
+        }
+    }, [ state, collections, notify ] );
+
+    const handleDeleteRequest = useCallback( ( collectionId, requestId ) => {
+        try {
+            if ( !collections ) return;
+
+            const collection = collections.find( c => c.id === collectionId );
+            if ( !collection ) return;
+
+            const updatedCollections = collections.map( c =>
+                c.id === collectionId
+                ? {
+                        ...c,
+                        requests:  c.requests.filter( r => r.id !== requestId ),
+                        updatedAt: new Date().toISOString()
+                    }
+                : c
+            );
+
+            storageManager._save( 'transmit:collections', updatedCollections );
+            notify( 'Request deleted successfully', 'success' );
+        } catch ( error ) {
+            console.error( 'Failed to delete request:', error );
+            notify( 'Failed to delete request', 'error' );
+        }
+    }, [ collections, notify ] );
 
     return (
         <Container fluid className="vh-100 p-0">
             <Row className="h-100 g-0">
                 <Col xs={2} className="bg-dark text-white h-100 border-end">
                     <CollectionsSidebar
-                        collections={collections}
+                        collections={collections || []}
                         onSelect={( item ) => {
                             state.setMethod( item.method );
                             state.setUrl( item.url );
@@ -132,12 +218,12 @@ const Transmit = () => {
                             if ( item.auth ) state.setAuth( item.auth );
                         }}
                         onShowHistory={() => state.setShowHistory( !state.showHistory )}
-                        onCreateCollection={() => {
-                            // Implement collection creation dialog
-                            notify( 'Creating collections is not implemented yet', 'info' );
-                        }}
+                        onCreateCollection={() => setShowCreateCollection( true )}
+                        onDeleteCollection={handleDeleteCollection}
+                        onDeleteRequest={handleDeleteRequest}
                     />
                 </Col>
+
                 <Col className="h-100 d-flex flex-column">
                     <div className="flex-grow-1 overflow-auto">
                         <RequestPanel
@@ -149,17 +235,18 @@ const Transmit = () => {
                             activeConfigTab={state.activeConfigTab}
                             setActiveConfigTab={state.setActiveConfigTab}
                             onSend={handleSend}
-                            onSave={handleSave}
+                            onSave={() => setShowSaveRequest( true )}
                         />
                         <ResponsePanel
                             response={response}
                             loading={loading}
                             error={error}
-                            onSave={handleSave}
+                            onSave={() => setShowSaveRequest( true )}
                             onClear={() => state.setResponse( null )}
                         />
                     </div>
                 </Col>
+
                 {state.showHistory && (
                     <Col xs={3} className="bg-white h-100 border-start">
                         <HistorySidebar
@@ -179,6 +266,25 @@ const Transmit = () => {
                     </Col>
                 )}
             </Row>
+
+            {showCreateCollection && (
+                <CreateCollectionDialog
+                    show={showCreateCollection}
+                    onHide={() => setShowCreateCollection( false )}
+                    onSave={handleCreateCollection}
+                />
+            )}
+
+            {showSaveRequest && (
+                <SaveRequestDialog
+                    show={showSaveRequest}
+                    onHide={() => setShowSaveRequest( false )}
+                    collections={collections || []}
+                    onSave={handleSaveRequest}
+                    onCreateCollection={handleCreateCollection}
+                />
+            )}
+
             {state.showSettings && (
                 <SettingsDialog
                     settings={settings}

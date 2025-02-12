@@ -264,3 +264,67 @@ body {
 .toast-body {
 	padding: 0.75rem;
 }
+
+
+/* src/components/Transmit/styles/collections.css */
+
+.group {
+	position: relative;
+}
+
+.group:hover .opacity-0 {
+	opacity: 1 !important;
+}
+
+.group .opacity-0 {
+	transition: opacity 0.2s ease-in-out;
+}
+
+/* Collection group styles */
+.collection-group {
+	border-radius: 4px;
+	transition:    background-color 0.2s ease-in-out;
+}
+
+.collection-group:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Request item styles */
+.request-item {
+	border-radius: 4px;
+	margin:        2px 0;
+	transition:    all 0.2s ease-in-out;
+}
+
+.request-item:hover {
+	background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Method badge styles */
+.method-badge {
+	padding:       2px 6px;
+	border-radius: 3px;
+	font-size:     0.75rem;
+	font-weight:   600;
+}
+
+.method-badge.get {
+	background-color: rgba(40, 167, 69, 0.2);
+	color:            #28a745;
+}
+
+.method-badge.post {
+	background-color: rgba(0, 123, 255, 0.2);
+	color:            #007bff;
+}
+
+.method-badge.put {
+	background-color: rgba(255, 193, 7, 0.2);
+	color:            #ffc107;
+}
+
+.method-badge.delete {
+	background-color: rgba(220, 53, 69, 0.2);
+	color:            #dc3545;
+}
