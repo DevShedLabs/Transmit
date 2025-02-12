@@ -1,8 +1,57 @@
 // src/components/Transmit/sidebars/CollectionsSidebar.jsx
 import React, {useState} from 'react';
-import {Button, Nav, Dropdown} from 'react-bootstrap';
+import {Button, Nav, Dropdown, Form, Modal} from 'react-bootstrap';
 import {FolderPlus, ChevronDown, History, MoreVertical, Folder, Edit, Trash2} from 'lucide-react';
 import CreateCollectionDialog from '../dialogs/CreateCollectionDialog';
+
+const RenameCollectionDialog = ( { show, onHide, collection, onRename } ) => {
+    const [ name, setName ] = useState( collection?.name || '' );
+
+    const handleSubmit = ( e ) => {
+        e.preventDefault();
+        if ( !name.trim() ) return;
+        onRename( collection.id, name.trim() );
+        onHide();
+    };
+
+    return (
+        <Modal show={show} onHide={onHide}>
+            <Form onSubmit={handleSubmit}>
+                <Modal.Header closeButton>
+                    <Modal.Title className="d-flex align-items-center">
+                        <Edit className="me-2" size={20} />
+                        Rename Collection
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group>
+                        <Form.Label>Name</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={name}
+                            onChange={( e ) => setName( e.target.value )}
+                            placeholder="Enter collection name"
+                            autoFocus
+                            required
+                        />
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={onHide}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        type="submit"
+                        disabled={ !name.trim() || name.trim() === collection?.name}
+                    >
+                        Rename
+                    </Button>
+                </Modal.Footer>
+            </Form>
+        </Modal>
+    );
+};
 
 const CollectionsSidebar = ( {
                                  collections = [],
@@ -10,7 +59,8 @@ const CollectionsSidebar = ( {
                                  onShowHistory,
                                  onCreateCollection,
                                  onDeleteCollection,
-                                 onDeleteRequest
+                                 onDeleteRequest,
+                                 onRenameCollection
                              } ) => {
     const [ showCreateDialog, setShowCreateDialog ] = useState( false );
 
@@ -60,6 +110,7 @@ const CollectionsSidebar = ( {
                                  onSelect={onSelect}
                                  onDelete={onDeleteCollection}
                                  onDeleteRequest={onDeleteRequest}
+                                 onRename={onRenameCollection}
                              />
                          ) )}
                      </Nav>
@@ -77,8 +128,9 @@ const CollectionsSidebar = ( {
     );
 };
 
-const CollectionGroup = ( { collection, onSelect, onDelete, onDeleteRequest } ) => {
-    const [ isOpen, setIsOpen ] = useState( true );
+const CollectionGroup = ( { collection, onSelect, onDelete, onDeleteRequest, onRename } ) => {
+    const [ isOpen, setIsOpen ]         = useState( true );
+    const [ showRename, setShowRename ] = useState( false );
 
     const handleDelete = ( e ) => {
         e.stopPropagation();
@@ -107,7 +159,7 @@ const CollectionGroup = ( { collection, onSelect, onDelete, onDeleteRequest } ) 
                         <MoreVertical size={16} />
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                        <Dropdown.Item>
+                        <Dropdown.Item onClick={() => setShowRename( true )}>
                             <Edit size={14} className="me-2" /> Rename
                         </Dropdown.Item>
                         <Dropdown.Item onClick={handleDelete} className="text-danger">
@@ -116,6 +168,14 @@ const CollectionGroup = ( { collection, onSelect, onDelete, onDeleteRequest } ) 
                     </Dropdown.Menu>
                 </Dropdown>
             </div>
+            {showRename && (
+                <RenameCollectionDialog
+                    show={showRename}
+                    onHide={() => setShowRename( false )}
+                    collection={collection}
+                    onRename={onRename}
+                />
+            )}
             {isOpen && (
                 <Nav className="flex-column ms-3">
                     {collection.requests?.map( request => (

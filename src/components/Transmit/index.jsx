@@ -90,6 +90,27 @@ const Transmit = () => {
         }
     }, [ collections, notify ] );
 
+    const handleRenameCollection = useCallback( ( collectionId, newName ) => {
+        try {
+            if ( !collections ) return;
+            const updatedCollections = collections.map( c =>
+                c.id === collectionId
+                ? {
+                        ...c,
+                        name:      newName,
+                        updatedAt: new Date().toISOString()
+                    }
+                : c
+            );
+            storageManager._save( 'transmit:collections', updatedCollections );
+            notify( 'Collection renamed successfully', 'success' );
+        } catch ( error ) {
+            console.error( 'Failed to rename collection:', error );
+            notify( 'Failed to rename collection', 'error' );
+        }
+    }, [ collections, notify ] );
+
+
     const handleDeleteCollection = useCallback( ( collectionId ) => {
         try {
             if ( !collections ) return;
@@ -188,6 +209,7 @@ const Transmit = () => {
                         onCreateCollection={handleCreateCollection}
                         onDeleteCollection={handleDeleteCollection}
                         onDeleteRequest={handleDeleteRequest}
+                        onRenameCollection={handleRenameCollection}
                     />
                 </Col>
 
@@ -256,4 +278,3 @@ const Transmit = () => {
 };
 
 export default Transmit;
-
