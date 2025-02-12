@@ -1,8 +1,10 @@
 // src/components/Transmit/ResponsePanel/ResponsePanel.jsx
+
 import React, {useState} from 'react';
 import {Card, Nav, Spinner} from 'react-bootstrap';
 import ResponseBody from './ResponseBody';
 import ResponseHeaders from './ResponseHeaders';
+import ResponseCookies from './ResponseCookies';
 import {useNotification} from '../context/NotificationContext';
 
 const ResponsePanel = ( {
@@ -14,6 +16,16 @@ const ResponsePanel = ( {
                         } ) => {
     const [ activeTab, setActiveTab ] = useState( 'body' );
     const { notify }                  = useNotification();
+
+    const getHeaderCount = () => {
+        if ( !response?.headers ) return 0;
+        return Object.keys( response.headers ).length;
+    };
+
+    const getCookieCount = () => {
+        if ( !response?.cookies ) return 0;
+        return response.cookies.length;
+    };
 
     if ( loading ) {
         return (
@@ -34,13 +46,13 @@ const ResponsePanel = ( {
                 <Card.Body>
                     <Card.Title className="text-danger">Request Failed</Card.Title>
                     <pre className="bg-light p-3 rounded mt-3" style={{ maxHeight: '300px', overflow: 'auto' }}>
-            {error.message}
+                        {error.message}
                         {error.details && (
                             <div className="mt-2 text-muted">
                                 {JSON.stringify( error.details, null, 2 )}
                             </div>
                         )}
-          </pre>
+                    </pre>
                 </Card.Body>
             </Card>
         );
@@ -73,7 +85,15 @@ const ResponsePanel = ( {
                             active={activeTab === 'headers'}
                             onClick={() => setActiveTab( 'headers' )}
                         >
-                            Response Headers
+                            Response Headers ({getHeaderCount()})
+                        </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'cookies'}
+                            onClick={() => setActiveTab( 'cookies' )}
+                        >
+                            Cookies ({getCookieCount()})
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -98,6 +118,12 @@ const ResponsePanel = ( {
                     <ResponseHeaders
                         headers={response.headers}
                         onCopy={() => notify( 'Headers copied to clipboard', 'success' )}
+                    />
+                )}
+                {activeTab === 'cookies' && (
+                    <ResponseCookies
+                        cookies={response.cookies}
+                        onCopy={() => notify( 'Cookies copied to clipboard', 'success' )}
                     />
                 )}
                 {activeTab === 'info' && (

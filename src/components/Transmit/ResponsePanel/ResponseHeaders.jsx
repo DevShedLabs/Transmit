@@ -1,4 +1,5 @@
 // src/components/Transmit/ResponsePanel/ResponseHeaders.jsx
+
 import React from 'react';
 import {Button} from 'react-bootstrap';
 import {Copy} from 'lucide-react';
@@ -10,13 +11,23 @@ const ResponseHeaders = ( { headers, onCopy } ) => {
     const handleCopy = async () => {
         try {
             const text = Object.entries( headers )
-                .map( ( [ key, value ] ) => `${key}: ${value}` )
+                .map( ( [ key, value ] ) => {
+                    const displayValue = typeof value === 'object' ? JSON.stringify( value, null, 2 ) : value;
+                    return `${key}: ${displayValue}`;
+                } )
                 .join( '\n' );
             await navigator.clipboard.writeText( text );
             onCopy();
         } catch ( error ) {
             notify( 'Failed to copy headers', 'error' );
         }
+    };
+
+    const formatHeaderValue = ( value ) => {
+        if ( typeof value === 'object' ) {
+            return JSON.stringify( value, null, 2 );
+        }
+        return value;
     };
 
     return (
@@ -39,7 +50,20 @@ const ResponseHeaders = ( { headers, onCopy } ) => {
                     {Object.entries( headers ).map( ( [ key, value ] ) => (
                         <tr key={key}>
                             <td className="text-muted" style={{ width: '30%' }}>{key}</td>
-                            <td>{value}</td>
+                            <td>
+                                    <pre style={{
+                                        margin:     0,
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak:  'break-word',
+                                        background: 'none',
+                                        border:     'none',
+                                        padding:    0,
+                                        fontSize:   'inherit',
+                                        fontFamily: 'inherit'
+                                    }}>
+                                        {formatHeaderValue( value )}
+                                    </pre>
+                            </td>
                         </tr>
                     ) )}
                     </tbody>
@@ -50,4 +74,3 @@ const ResponseHeaders = ( { headers, onCopy } ) => {
 };
 
 export default ResponseHeaders;
-
