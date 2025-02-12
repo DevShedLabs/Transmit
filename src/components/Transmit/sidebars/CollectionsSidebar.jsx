@@ -1,5 +1,4 @@
 // src/components/Transmit/sidebars/CollectionsSidebar.jsx
-
 import React, {useState} from 'react';
 import {Button, Nav, Dropdown} from 'react-bootstrap';
 import {FolderPlus, ChevronDown, History, MoreVertical, Folder, Edit, Trash2} from 'lucide-react';
@@ -15,14 +14,20 @@ const CollectionsSidebar = ( {
                              } ) => {
     const [ showCreateDialog, setShowCreateDialog ] = useState( false );
 
+    const handleCreateCollection = ( collectionData ) => {
+        if ( onCreateCollection ) {
+            onCreateCollection( collectionData );
+            setShowCreateDialog( false );
+        }
+    };
+
     return (
         <div className="d-flex flex-column h-100">
             <CreateCollectionDialog
                 show={showCreateDialog}
                 onHide={() => setShowCreateDialog( false )}
-                onSave={onCreateCollection}
+                onSave={handleCreateCollection}
             />
-
             <div className="p-3">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="mb-0">Collections</h5>
@@ -34,7 +39,6 @@ const CollectionsSidebar = ( {
                         <FolderPlus size={18} />
                     </Button>
                 </div>
-
                 {collections.length === 0 ? (
                     <div className="text-muted text-center py-3">
                         <Folder size={32} className="mb-2 opacity-50" />
@@ -61,7 +65,6 @@ const CollectionsSidebar = ( {
                      </Nav>
                  )}
             </div>
-
             <Button
                 variant="link"
                 className="text-white mt-auto mx-3 mb-3 text-decoration-none"
@@ -113,10 +116,9 @@ const CollectionGroup = ( { collection, onSelect, onDelete, onDeleteRequest } ) 
                     </Dropdown.Menu>
                 </Dropdown>
             </div>
-
             {isOpen && (
                 <Nav className="flex-column ms-3">
-                    {collection.requests.map( request => (
+                    {collection.requests?.map( request => (
                         <RequestItem
                             key={request.id}
                             item={request}

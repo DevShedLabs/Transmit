@@ -1,5 +1,4 @@
 // src/components/Transmit/index.jsx
-
 import React, {useCallback, useEffect, useState} from 'react';
 import {Container, Row, Col} from 'react-bootstrap';
 import {useTransmitState} from './hooks/useTransmitState';
@@ -11,7 +10,6 @@ import ResponsePanel from './ResponsePanel';
 import CollectionsSidebar from './sidebars/CollectionsSidebar';
 import HistorySidebar from './sidebars/HistorySidebar';
 import SettingsDialog from './dialogs/SettingsDialog';
-import CreateCollectionDialog from './dialogs/CreateCollectionDialog';
 import SaveRequestDialog from './dialogs/SaveRequestDialog';
 import {useNotification} from './context/NotificationContext';
 
@@ -30,36 +28,15 @@ const Transmit = () => {
               saveWorkspaceState
           }                                         = useStorage();
 
-    // Dialog states
-    const [ showCreateCollection, setShowCreateCollection ] = useState( false );
-    const [ showSaveRequest, setShowSaveRequest ]           = useState( false );
+    const [ showSaveRequest, setShowSaveRequest ] = useState( false );
 
-    // Save workspace state when it changes
-    useEffect( () => {
-        const workspaceState = {
-            method:     state.method,
-            url:        state.url,
-            headers:    state.headers,
-            params:     state.params,
-            body:       state.body,
-            bodyType:   state.bodyType,
-            bodyFormat: state.bodyFormat,
-            auth:       state.auth,
-            settings:   state.settings
-        };
-        saveWorkspaceState( workspaceState );
-    }, [
-        state.method,
-        state.url,
-        state.headers,
-        state.params,
-        state.body,
-        state.bodyType,
-        state.bodyFormat,
-        state.auth,
-        state.settings,
-        saveWorkspaceState
-    ] );
+    const generateId = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : ( r & 0x3 | 0x8 );
+            return v.toString( 16 );
+        } );
+    };
 
     const handleSend = useCallback( async () => {
         try {
@@ -81,7 +58,6 @@ const Transmit = () => {
             };
 
             const responseData = await sendRequest( request, state.environment );
-            state.setResponse( responseData );
             addHistoryItem( request, responseData );
             notify( 'Request sent successfully', 'success' );
         } catch ( err ) {
@@ -89,15 +65,8 @@ const Transmit = () => {
         }
     }, [ state, sendRequest, notify, addHistoryItem ] );
 
-    const generateId = () => {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, c => {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : ( r & 0x3 | 0x8 );
-            return v.toString( 16 );
-        } );
-    };
 
-    const handleCreateCollection = useCallback( ( collection ) => {
+    const handleCreateCollection = useCallback( async ( collection ) => {
         try {
             console.log( 'Creating collection:', collection );
             const newCollection = {
@@ -108,26 +77,24 @@ const Transmit = () => {
                 updatedAt: new Date().toISOString()
             };
 
-            storageManager._save( 'transmit:collections', [
-                ...( collections || [] ),
-                newCollection
-            ] );
+            // Save to storage
+            const updatedCollections = [ ...( collections || [] ), newCollection ];
+            await storageManager._save( 'transmit:collections', updatedCollections );
 
             notify( 'Collection created successfully', 'success' );
-            setShowCreateCollection( false );
+            return newCollection; // Return the new collection
         } catch ( error ) {
             console.error( 'Failed to create collection:', error );
             notify( 'Failed to create collection: ' + error.message, 'error' );
+            throw error;
         }
     }, [ collections, notify ] );
 
     const handleDeleteCollection = useCallback( ( collectionId ) => {
         try {
             if ( !collections ) return;
-
             const updatedCollections = collections.filter( c => c.id !== collectionId );
             storageManager._save( 'transmit:collections', updatedCollections );
-
             notify( 'Collection deleted successfully', 'success' );
         } catch ( error ) {
             console.error( 'Failed to delete collection:', error );
@@ -138,7 +105,6 @@ const Transmit = () => {
     const handleSaveRequest = useCallback( ( { collectionId, request } ) => {
         try {
             if ( !collections ) return;
-
             const collection = collections.find( c => c.id === collectionId );
             if ( !collection ) throw new Error( 'Collection not found' );
 
@@ -175,6 +141,7 @@ const Transmit = () => {
             notify( 'Failed to save request: ' + error.message, 'error' );
         }
     }, [ state, collections, notify ] );
+
 
     const handleDeleteRequest = useCallback( ( collectionId, requestId ) => {
         try {
@@ -218,7 +185,7 @@ const Transmit = () => {
                             if ( item.auth ) state.setAuth( item.auth );
                         }}
                         onShowHistory={() => state.setShowHistory( !state.showHistory )}
-                        onCreateCollection={() => setShowCreateCollection( true )}
+                        onCreateCollection={handleCreateCollection}
                         onDeleteCollection={handleDeleteCollection}
                         onDeleteRequest={handleDeleteRequest}
                     />
@@ -267,14 +234,6 @@ const Transmit = () => {
                 )}
             </Row>
 
-            {showCreateCollection && (
-                <CreateCollectionDialog
-                    show={showCreateCollection}
-                    onHide={() => setShowCreateCollection( false )}
-                    onSave={handleCreateCollection}
-                />
-            )}
-
             {showSaveRequest && (
                 <SaveRequestDialog
                     show={showSaveRequest}
@@ -297,3 +256,4 @@ const Transmit = () => {
 };
 
 export default Transmit;
+

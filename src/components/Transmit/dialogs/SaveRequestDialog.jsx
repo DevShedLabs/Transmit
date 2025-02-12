@@ -1,15 +1,12 @@
 // src/components/Transmit/dialogs/SaveRequestDialog.jsx
-
 import React, {useState} from 'react';
 import {Modal, Form, Button} from 'react-bootstrap';
 import {Save, Plus, ArrowLeft} from 'lucide-react';
 
 const SaveRequestDialog = ( { show, onHide, onSave, collections, onCreateCollection } ) => {
-    // State for request saving
-    const [ selectedCollection, setSelectedCollection ] = useState( '' );
-    const [ requestName, setRequestName ]               = useState( '' );
-    const [ requestDescription, setRequestDescription ] = useState( '' );
-
+    const [ selectedCollection, setSelectedCollection ]       = useState( '' );
+    const [ requestName, setRequestName ]                     = useState( '' );
+    const [ requestDescription, setRequestDescription ]       = useState( '' );
     // State for collection creation
     const [ isCreatingCollection, setIsCreatingCollection ]   = useState( false );
     const [ collectionName, setCollectionName ]               = useState( '' );
@@ -24,25 +21,35 @@ const SaveRequestDialog = ( { show, onHide, onSave, collections, onCreateCollect
         setIsCreatingCollection( false );
     };
 
-    const handleSubmit = ( e ) => {
+    const handleSubmit = async ( e ) => {
         e.preventDefault();
 
         if ( isCreatingCollection ) {
-            onCreateCollection( {
+            // Create new collection and wait for it to complete
+            await onCreateCollection( {
                 name:        collectionName.trim(),
                 description: collectionDescription.trim()
             } );
-            resetForm();
-        } else {
-            onSave( {
-                collectionId: selectedCollection,
-                request:      {
-                    name:        requestName.trim(),
-                    description: requestDescription.trim()
-                }
-            } );
-            resetForm();
+
+            // Return to save request form
+            setIsCreatingCollection( false );
+            setCollectionName( '' );
+            setCollectionDescription( '' );
+
+            // Don't close the dialog - let user continue saving the request
+            return;
         }
+
+        // Save the request
+        onSave( {
+            collectionId: selectedCollection,
+            request:      {
+                name:        requestName.trim(),
+                description: requestDescription.trim()
+            }
+        } );
+        resetForm();
+        onHide();
     };
 
     return (
@@ -59,7 +66,6 @@ const SaveRequestDialog = ( { show, onHide, onSave, collections, onCreateCollect
                         {isCreatingCollection ? 'Create Collection' : 'Save Request'}
                     </Modal.Title>
                 </Modal.Header>
-
                 <Modal.Body>
                     {isCreatingCollection ? (
                         <>
@@ -143,7 +149,6 @@ const SaveRequestDialog = ( { show, onHide, onSave, collections, onCreateCollect
                          </>
                      )}
                 </Modal.Body>
-
                 <Modal.Footer>
                     <Button variant="secondary" onClick={onHide}>
                         Cancel
